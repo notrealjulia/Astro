@@ -1,0 +1,6 @@
+[theme]
+primaryColor="#FF00FF"  # Bright neon pink for primary elements
+backgroundColor="#2B213A"  # Dark purple for the background
+secondaryBackgroundColor="#34294F"  # A slightly lighter shade of purple for secondary backgrounds
+textColor="#08F7FE"  # Neon cyan for text, providing a high contrast against the dark background
+font="sans serif"
