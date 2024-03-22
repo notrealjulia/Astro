@@ -4,6 +4,8 @@ import matplotlib.pyplot as plt
 from kerykeion import Report, AstrologicalSubject
 from geopy.geocoders import Nominatim
 from geopy.exc import GeocoderTimedOut
+import streamlit as st
+import random
 
 def get_compatibility(sign1, sign2, dataframe):
     """
@@ -101,7 +103,7 @@ def plot_compatibility_distribution(df, column='Compatibility Score'):
     # Showing the plot
     plt.show() 
 
-def create_fullchart_df(name, year, month, day, hour, minute, city, nation):
+def create_fullchart_df(name, date, time, city, nation):
     """
     Create a DataFrame representing the full astrological chart of a person.
 
@@ -118,92 +120,101 @@ def create_fullchart_df(name, year, month, day, hour, minute, city, nation):
     Returns:
     - fullchart_df: DataFrame - A DataFrame with the astrological chart information.
     """
-    # Instantiate an AstrologicalSubject object
-    person = AstrologicalSubject(name=name, year=year, month=month, day=day, 
-                                 hour=hour, minute=minute, city=city, nation=nation)
+    if check_location(city, nation):
+        year = date.year
+        month = date.month
+        day = date.day
+        hour = time.hour
+        minute = time.minute
+        
+        # Instantiate an AstrologicalSubject object
+        person = AstrologicalSubject(name=name, year=year, month=month, day=day, 
+                                    hour=hour, minute=minute, city=city, nation=nation)
 
-    # Retrieve the list of planet objects
-    fullchart = person.planets_list
+        # Retrieve the list of planet objects
+        fullchart = person.planets_list
 
-    # Convert each object in the list to a dictionary
-    list_of_dicts = [
-        {attr: getattr(obj, attr) for attr in dir(obj)
-         if not attr.startswith('__') and not callable(getattr(obj, attr))}
-        for obj in fullchart
-    ]
+        # Convert each object in the list to a dictionary
+        list_of_dicts = [
+            {attr: getattr(obj, attr) for attr in dir(obj)
+            if not attr.startswith('__') and not callable(getattr(obj, attr))}
+            for obj in fullchart
+        ]
 
-    # Create a DataFrame from the list of dictionaries
-    fullchart_df = pd.DataFrame(list_of_dicts)
+        # Create a DataFrame from the list of dictionaries
+        fullchart_df = pd.DataFrame(list_of_dicts)
 
-        # Mapping dictionaries
-    sign_elements = {
-        'Ari': 'Fire', 'Leo': 'Fire', 'Sag': 'Fire',
-        'Tau': 'Earth', 'Vir': 'Earth', 'Cap': 'Earth',
-        'Gem': 'Air', 'Lib': 'Air', 'Aqu': 'Air',
-        'Can': 'Water', 'Sco': 'Water', 'Pis': 'Water'
-    }
+            # Mapping dictionaries
+        sign_elements = {
+            'Ari': 'Fire', 'Leo': 'Fire', 'Sag': 'Fire',
+            'Tau': 'Earth', 'Vir': 'Earth', 'Cap': 'Earth',
+            'Gem': 'Air', 'Lib': 'Air', 'Aqu': 'Air',
+            'Can': 'Water', 'Sco': 'Water', 'Pis': 'Water'
+        }
 
-    sign_qualities = {
-        'Ari': 'Cardinal', 'Can': 'Cardinal', 'Lib': 'Cardinal', 'Cap': 'Cardinal',
-        'Tau': 'Fixed', 'Leo': 'Fixed', 'Sco': 'Fixed', 'Aqu': 'Fixed',
-        'Gem': 'Mutable', 'Vir': 'Mutable', 'Sag': 'Mutable', 'Pis': 'Mutable'
-    }
+        sign_qualities = {
+            'Ari': 'Cardinal', 'Can': 'Cardinal', 'Lib': 'Cardinal', 'Cap': 'Cardinal',
+            'Tau': 'Fixed', 'Leo': 'Fixed', 'Sco': 'Fixed', 'Aqu': 'Fixed',
+            'Gem': 'Mutable', 'Vir': 'Mutable', 'Sag': 'Mutable', 'Pis': 'Mutable'
+        }
 
-            # Add the ascendant information as a new row
-    ascendant_info = {
-        'name': 'Ascendant',
-        'sign': person.first_house['sign'],
-        'house': 1,  # Ascendant is always associated with the 1st house
-        'element': sign_elements.get(person.first_house['sign'], None),  # Retrieve element based on the sign
-        'quality': sign_qualities.get(person.first_house['sign'], None),  # Retrieve quality based on the sign
-        'position': person.houses_degree_ut[0],  # The degree of the ascendant
-        'retrograde': False  # The ascendant is not a planet and thus cannot be retrograde
-    }
-    fullchart_df = pd.concat([fullchart_df, pd.DataFrame([ascendant_info])], ignore_index=True)
-        # Mapping dictionary
-    house_to_number = {
-        'First_House': 1,
-        'Second_House': 2,
-        'Third_House': 3,
-        'Fourth_House': 4,
-        'Fifth_House': 5,
-        'Sixth_House': 6,
-        'Seventh_House': 7,
-        'Eighth_House': 8,
-        'Ninth_House': 9,
-        'Tenth_House': 10,
-        'Eleventh_House': 11,
-        'Twelfth_House': 12
-    }
+                # Add the ascendant information as a new row
+        ascendant_info = {
+            'name': 'Ascendant',
+            'sign': person.first_house['sign'],
+            'house': 1,  # Ascendant is always associated with the 1st house
+            'element': sign_elements.get(person.first_house['sign'], None),  # Retrieve element based on the sign
+            'quality': sign_qualities.get(person.first_house['sign'], None),  # Retrieve quality based on the sign
+            'position': person.houses_degree_ut[0],  # The degree of the ascendant
+            'retrograde': False  # The ascendant is not a planet and thus cannot be retrograde
+        }
+        fullchart_df = pd.concat([fullchart_df, pd.DataFrame([ascendant_info])], ignore_index=True)
+            # Mapping dictionary
+        house_to_number = {
+            'First_House': 1,
+            'Second_House': 2,
+            'Third_House': 3,
+            'Fourth_House': 4,
+            'Fifth_House': 5,
+            'Sixth_House': 6,
+            'Seventh_House': 7,
+            'Eighth_House': 8,
+            'Ninth_House': 9,
+            'Tenth_House': 10,
+            'Eleventh_House': 11,
+            'Twelfth_House': 12
+        }
 
-    # Replace the string house names with numbers
-    fullchart_df['house'] = fullchart_df['house'].replace(house_to_number)
-    # Mapping dictionary for zodiac signs
-    sign_full_names = {
-        'Ari': 'Aries',
-        'Tau': 'Taurus',
-        'Gem': 'Gemini',
-        'Can': 'Cancer',
-        'Leo': 'Leo',
-        'Vir': 'Virgo',
-        'Lib': 'Libra',
-        'Sco': 'Scorpio',
-        'Sag': 'Sagittarius',
-        'Cap': 'Capricorn',
-        'Aqu': 'Aquarius',
-        'Pis': 'Pisces'
-    }
+        # Replace the string house names with numbers
+        fullchart_df['house'] = fullchart_df['house'].replace(house_to_number)
+        # Mapping dictionary for zodiac signs
+        sign_full_names = {
+            'Ari': 'Aries',
+            'Tau': 'Taurus',
+            'Gem': 'Gemini',
+            'Can': 'Cancer',
+            'Leo': 'Leo',
+            'Vir': 'Virgo',
+            'Lib': 'Libra',
+            'Sco': 'Scorpio',
+            'Sag': 'Sagittarius',
+            'Cap': 'Capricorn',
+            'Aqu': 'Aquarius',
+            'Pis': 'Pisces'
+        }
 
-    # Replace the abbreviated sign names with full names
-    fullchart_df['sign'] = fullchart_df['sign'].replace(sign_full_names)
+        # Replace the abbreviated sign names with full names
+        fullchart_df['sign'] = fullchart_df['sign'].replace(sign_full_names)
 
-    fullchart_df = fullchart_df.drop([7, 8, 9, 10]).reset_index(drop=True)
+        fullchart_df = fullchart_df.drop([7, 8, 9, 10]).reset_index(drop=True)
 
-    #fullchart_df = fullchart_df[['name', 'sign', 'house', 'element', 'quality', 'position', 'retrograde']]
-    fullchart_df = fullchart_df[['name', 'sign', 'house']]
+        #fullchart_df = fullchart_df[['name', 'sign', 'house', 'element', 'quality', 'position', 'retrograde']]
+        fullchart_df = fullchart_df[['name', 'sign', 'house']]
 
+        return fullchart_df
     
-    return fullchart_df
+    else:
+        st.error("Location not found or invalid. Please enter a valid city and country.")
 
 def calculate_presence_percentages(df):
     """
@@ -253,12 +264,24 @@ def calculate_presence_percentages(df):
 
     return output
 
+    
+#!TODO find a different geo checker, this one has a strict limit on requests
 def check_location(city, country):
+    """
+    Check if a given location exists.
+
+    Args:
+        city (str): The name of the city.
+        country (str): The name of the country.
+
+    Returns:
+        bool: True if the location exists, False otherwise.
+    """
     # Combine city and country for the query
     location_query = f"{city}, {country}"
 
     # Using Nominatim Geocoder
-    geolocator = Nominatim(user_agent="geoapiExercises")
+    geolocator = Nominatim(user_agent="Astrology_location_test")
 
     try:
         # Attempt to get location information
@@ -290,3 +313,50 @@ def astro_chat(message, model, client):
     )
     response = chat_completion.choices[0].message.content
     return response
+
+def roast_chart(chart_str, name, model, client):
+    with st.spinner('Consulting the stars or whatever...'):
+        chart_info = (
+            f"Create a nihilistic and sarcastic roast of {name}'s astrological chart \n{chart_str} \n\n"
+            f"Begin with a summary that highlights the interplay between placements. "
+            f"Identify the placement suggesting {name}'s reliance on AI for astrological insights. Go as wild as you can on this roast, don't hold back!!! "
+            f"Finish with a condescending funny life advice based on Chiron and True Node placements, don't say the word 'condescending'." 
+            f"Formulate your answer in a gender neutral way. Don't forget the hosues!"
+        )
+
+        return astro_chat(message=chart_info, model=model, client=client)
+
+
+def ask_question(question, model, client, chart_str):
+    with st.spinner(display_random_message()):
+
+        question_prompt = (
+            f"You are a mysterius astrologer, and a person with this chart \n{chart_str}\n asked you a question {question} "
+            f"First, roast their question, don't hold back. "
+            f"Condescendingly Identify the placement in this person's chart would promt for such a querry. Give a wild answer, make it funny, don't say the word funny or wild"
+            f"Don't mention the houses unless the question is about them. "
+            f"Finish of with a sarcastric comment about what else they could have asked. Don't say the word 'sarcastic' or 'comment'."
+        )
+
+        return astro_chat(message=question_prompt, model=model, client=client)
+
+
+def display_random_message():
+    """
+    Displays one of ten random messages.
+    """
+    messages = [
+        "Sifting through cosmic vibes",
+        "Tripping on star dust",
+        "I'm sworn to carry your burdens... and answer your questions, I guess",
+        "Poking the either with a stick",
+        "Gossiping with rogue planets",
+        "Spilling the cosmic tea",
+        "Transcribing answers from the void",
+        "Translating into something you can understand",
+        "Eavesdropping on the celestial chatter",
+        "Decrypting starlight signals"
+    ]
+    
+    random_message = random.choice(messages)
+    return random_message
