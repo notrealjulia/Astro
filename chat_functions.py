@@ -50,13 +50,14 @@ def astro_chat(message, model, client):
     return response
 
 def roast_chart(chart_str, name, model, client):
-    with st.spinner('Consulting the stars or whatever...'):
+    message = display_random_message()
+    with st.spinner(message):
 
         chart_str = chart_str.to_string(justify='left')
 
         chart_info = (
             f"Create a nihilistic and sarcastic roast of {name}'s astrological chart \n{chart_str} \n\n"
-            f"Begin with a summary that highlights the interplay between the main placements. "
+            f"Begin the roast with a summary that highlights the interplay between the main placements. "
             f"Identify the placement suggesting {name}'s reliance on AI for astrological insights. Go as wild as you can on this roast, don't hold back!!! "
             f"Finish with a condescending funny life advice based on Chiron and True Node placements, don't say the word 'condescending'." 
             f"Formulate your answer in a gender neutral way. Don't forget the houses!"
@@ -66,7 +67,8 @@ def roast_chart(chart_str, name, model, client):
 
 
 def ask_question(question, model, client, chart_str):
-    with st.spinner(display_random_message()):
+    message = display_random_message()
+    with st.spinner(message):
 
         chart_str = chart_str.to_string(justify='left')
 
@@ -93,9 +95,10 @@ def display_random_message():
         "Gossiping with rogue planets",
         "Spilling the cosmic tea",
         "Transcribing answers from the void",
-        "Translating into something you can understand",
+        "Translating astral projection into something you can understand",
         "Eavesdropping on the celestial chatter",
-        "Decrypting starlight signals"
+        "Decrypting starlight signals",
+        'Consulting the stars or whatever...'
     ]
     
     random_message = random.choice(messages)
