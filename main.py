@@ -6,43 +6,33 @@ import kerykeion
 from kerykeion import Report, AstrologicalSubject, KerykeionChartSVG
 import pandas as pd
 import numpy as np
-from helper_functions import *
+from astro_functions import *
+from chat_functions import *
 from geopy.geocoders import Nominatim
 from geopy.exc import GeocoderTimedOut
 
-#######################################################COLLECT USER DETAILS#################################################################
-
+#Page setup
 logo = "icons/stars.png"
-# Configure Streamlit page
+
 st.set_page_config(
     page_title="ASTRO",
     page_icon=logo,
     layout="wide"
 )
 st.title(':violet[Zazatron]')
-st.write(":violet[__Embrace Saturn's Shade and Talk the AICosmos When Humans r smol__] \n\n :blue[_None of your data is stored, it goes 'poof' as soon as you close the browser_]")
+st.write(":violet[__Embrace Saturn's Shade and Talk to the AI-Cosmos When Humans r 2 smol__] \n\n :blue[_None of your data is stored, it goes 'poof' as soon as you close the browser_]")
 st.write(" ")
 st.write(" ")
 
-api_key = st.text_input("OPENAI API KEY", placeholder="the app does NOT work without an API key")
-client = OpenAI(api_key=api_key)
-
-#client = OpenAI(api_key=os.environ.get("OPENAI_API_KEY")) 
+#Change to True to use the system variable OPENAI_API_KEY
+client = initialize_openai_client(use_env_variable=False)
 
 selected_model = "gpt-4"  # Setting the default model
 if "openai_model" not in st.session_state:
     st.session_state["openai_model"] = selected_model
 
-# Checking if the selected model is available
-#if selected_model is None:
-#    st.error("Model not found")
-#else:
-#    st.success("Model found.")
-
-#######################################################PAGE SETUP#################################################################
-
+#User Input
 col00, col01 = st.columns(2)
-
 with col00:
     name = st.text_input("Your Astro Name")
 with col01:
@@ -53,13 +43,12 @@ with col1:
     hour = st.selectbox("Your time of Birth: Hour", range(24), format_func=lambda x: f"{x:02d}")
 with col2:
     minute = st.selectbox("Minute", range(60), format_func=lambda x: f"{x:02d}")
-time = datetime.time(hour, minute)
-
 with col3:
     city = st.text_input("Your City of Birth")
 with col4:
     nation = st.text_input("Your Country of Birth")
 
+time = datetime.time(hour, minute)
     
 # Store the user details in the session state
 st.session_state['astro_details'] = {
@@ -78,10 +67,9 @@ if 'roast_button' not in st.session_state:
 if 'question_button' not in st.session_state:
     st.session_state['question_button'] = False
 
-# Initialize the session state for Button 1's output if it doesn't exist yet
+# Initialize the session state for the out from Zazatron
 if 'chart_output' not in st.session_state:
     st.session_state['chart_output'] = None
-
 if 'chart_roast' not in st.session_state:
     st.session_state['chart_roast'] = None
 
@@ -98,7 +86,7 @@ if st.session_state['chart_output'] is not None:
     st.write('Astrological Chart for ', name)
     st.write(st.session_state['chart_output'])
 
-# Enable the "Roast My Chart" button when the astrological chart is calculated
+# "Roast My Chart" button is pressed and the roast is saved in the session state
 if st.session_state['chart_button']:
     st.session_state['roast_button'] = True
     if st.button(":violet[This doesn't look like anything to me... Roast My Chart!]"):
@@ -106,7 +94,7 @@ if st.session_state['chart_button']:
         roast = roast_chart(chart_str=st.session_state['chart_output'], name=name, model=selected_model, client=client)
         st.session_state['chart_roast'] = roast
 
-# Display the roast of the astrological chart and enable the "Ask the Question" button
+# When the roast is displayed  enable the "Ask the Question" button
 if st.session_state['chart_roast'] is not None:
     st.write(st.session_state['chart_roast'])
     st.session_state['question_button'] = True
@@ -114,4 +102,3 @@ if st.session_state['chart_roast'] is not None:
     if st.button(":violet[Ask the Question]"):
         ai_answer = ask_question(user_question, model=selected_model, client=client, chart_str=st.session_state['chart_output'])
         st.write(ai_answer)
-
