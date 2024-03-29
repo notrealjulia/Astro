@@ -74,7 +74,7 @@ if "tab_selected" not in st.session_state:
     st.session_state["tab_selected"] = None
 
 with chart:
-    st.button(":violet[Reveal Your Astrological Chart]", use_container_width=True, key="Chart", on_click=lambda: 
+    st.button(":violet[Reveal Your Astrological Chart <-- click this first]", use_container_width=True, key="Chart", on_click=lambda: 
               st.session_state.update({"tab_selected": "Chart"}), type="primary" if st.session_state["tab_selected"] == "Chart" else "secondary")        
 with roast:
     st.button(":violet[Roast My Chart]", use_container_width=True, key="Roast", on_click=lambda: 
@@ -85,7 +85,8 @@ with relationships:
 with questions:
     st.button(":violet[Ask Zazatron a Question]", use_container_width=True, key="Question", on_click=lambda: 
               st.session_state.update({"tab_selected": "Question"}), type="primary" if st.session_state["tab_selected"] == "Question" else "secondary") 
-    
+
+#!todo add chart calculator for all tabs    
 
 if st.session_state["tab_selected"] == "Chart":
     st.subheader(f"{name}'s Astrological Chart")
