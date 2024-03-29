@@ -7,101 +7,31 @@ from geopy.exc import GeocoderTimedOut
 import streamlit as st
 import random
 
-def get_compatibility(sign1, sign2, dataframe):
+#!TODO find a different geo checker, this one has a strict limit on requests
+def check_location(city, country):
     """
-    Returns the compatibility score between two signs.
-    
-    :param sign1: String, first astrological sign
-    :param sign2: String, second astrological sign
-    :param dataframe: DataFrame, the DataFrame containing the compatibility scores
-    :return: Integer, compatibility score (returns None if not found)
+    Check if a given location exists.
+
+    Args:
+        city (str): The name of the city.
+        country (str): The name of the country.
+
+    Returns:
+        bool: True if the location exists, False otherwise.
     """
-    # Ensure that sign1 and sign2 are in the same order as in the DataFrame
-    if (sign1, sign2) not in zip(dataframe["Sign 1"], dataframe["Sign 2"]):
-        # If not found, swap the signs
-        sign1, sign2 = sign2, sign1
-    
-    # Query the DataFrame
-    score = dataframe[(dataframe["Sign 1"] == sign1) & (dataframe["Sign 2"] == sign2)]["Compatibility Score"].values
-    return score[0] if len(score) > 0 else None
+    # Combine city and country for the query
+    location_query = f"{city}, {country}"
 
-def calculate_compatibility(person1_df, person2_df, compatibility_df):
-    """
-    Calculates the astrological compatibility between two individuals based on selected celestial bodies and a compatibility DataFrame.
+    # Using Nominatim Geocoder
+    geolocator = Nominatim(user_agent="Astrology_location_test")
 
-    This function compares the astrological signs of the Sun, Moon, Mercury, Venus, and Mars placements from two different persons' 
-    astrological charts and calculates the compatibility score for each placement. It then averages these scores to determine an overall compatibility score.
+    try:
+        # Attempt to get location information
+        location = geolocator.geocode(location_query)
+        return location is not None
+    except GeocoderTimedOut:
+        return False
 
-    :param person1_df: DataFrame, containing astrological placements and details for person 1
-    :param person2_df: DataFrame, containing astrological placements and details for person 2
-    :param compatibility_df: DataFrame, containing the compatibility scores between signs
-    :return: Tuple, a DataFrame with individual compatibility scores and an overall compatibility score as a pandas Series
-    """
-
-    # Get the list of celestial bodies to compare
-    bodies_to_compare = ['Sun', 'Moon', 'Mercury', 'Venus', 'Mars']
-    
-    # Calculate compatibility for each body and store the scores
-    scores = []
-    for body in bodies_to_compare:
-        sign1 = person1_df.loc[person1_df['name'] == body, 'sign'].values[0]
-        sign2 = person2_df.loc[person2_df['name'] == body, 'sign'].values[0]
-        score = get_compatibility(sign1, sign2, compatibility_df)
-
-        scores.append({
-            'Placement': body,
-            'Person1_Sign': sign1,
-            'Person2_Sign': sign2,
-            'Compatibility_Score': score
-        })
-
-    # Create a DataFrame for individual scores
-    final_scores = pd.DataFrame(scores)
-    # Calculate the overall average score
-    overall_score = final_scores[['Compatibility_Score']].mean()
-
-    # Return the DataFrame of scores and the overall score
-    return final_scores, overall_score
-
-
-""" # This function retrieves the compatibility score for a pair of signs
-def get_compatibility(sign1, sign2, compatibility_data):
-    # Find the compatibility score for the combination of sign1 and sign2
-    compatibility_row = compatibility_data.loc[
-        (compatibility_data['Sign 1'] == sign1) & (compatibility_data['Sign 2'] == sign2)
-    ]
-    # If the combination does not exist, try the opposite combination
-    if compatibility_row.empty:
-        compatibility_row = compatibility_data.loc[
-            (compatibility_data['Sign 1'] == sign2) & (compatibility_data['Sign 2'] == sign1)
-        ]
-    # Return the compatibility score
-    return compatibility_row['Compatibility Score'].values[0] """
-
-
-def plot_compatibility_distribution(df, column='Compatibility Score'):
-    """
-    Plot the distribution of compatibility scores for zodiac sign pairs.
-
-    This function takes a pandas DataFrame and a column name as input. It then plots a histogram 
-    showing the distribution of the compatibility scores in the specified column.
-
-    :param df: A pandas DataFrame containing zodiac compatibility data.
-    :type df: pandas.DataFrame
-    :param column: The name of the column in the DataFrame to plot. Defaults to 'Compatibility Score'.
-    :type column: str
-    """
-    # Plotting the histogram
-    plt.figure(figsize=(10, 6))
-    plt.hist(df[column], edgecolor='black')
-    
-    # Adding titles and labels
-    plt.title('Compatibility Score Distribution')
-    plt.xlabel('Compatibility Score')
-    plt.ylabel('Number of Zodiac Sign Pairs')
-    
-    # Showing the plot
-    plt.show() 
 
 def create_fullchart_df(name, date, time, city, nation):
     """
@@ -158,7 +88,7 @@ def create_fullchart_df(name, date, time, city, nation):
             'Gem': 'Mutable', 'Vir': 'Mutable', 'Sag': 'Mutable', 'Pis': 'Mutable'
         }
 
-                # Add the ascendant information as a new row
+        # Add the ascendant information as a new row
         ascendant_info = {
             'name': 'Ascendant',
             'sign': person.first_house['sign'],
@@ -169,6 +99,7 @@ def create_fullchart_df(name, date, time, city, nation):
             'retrograde': False  # The ascendant is not a planet and thus cannot be retrograde
         }
         fullchart_df = pd.concat([fullchart_df, pd.DataFrame([ascendant_info])], ignore_index=True)
+
             # Mapping dictionary
         house_to_number = {
             'First_House': 1,
@@ -206,15 +137,139 @@ def create_fullchart_df(name, date, time, city, nation):
         # Replace the abbreviated sign names with full names
         fullchart_df['sign'] = fullchart_df['sign'].replace(sign_full_names)
 
-        fullchart_df = fullchart_df.drop([7, 8, 9, 10]).reset_index(drop=True)
+        #!TODO: Chane True_Node to True Node
 
+        fullchart_df = fullchart_df.drop([7, 8, 9, 10]).reset_index(drop=True)
         #fullchart_df = fullchart_df[['name', 'sign', 'house', 'element', 'quality', 'position', 'retrograde']]
+
+        # Create a DataFrame with only the relevant columns
         fullchart_df = fullchart_df[['name', 'sign', 'house']]
 
         return fullchart_df
     
     else:
         st.error("Location not found or invalid. Please enter a valid city and country.")
+
+def relationship_df(df_person1, df_person2, user_name, relation, drop_start=5, drop_end=9):
+    """
+    Concatenates two dataframes side by side and drops a specified range of rows.
+
+    Parameters:
+    - df_person1 (pd.DataFrame): The first person's astrological information.
+    - df_person2 (pd.DataFrame): The second person's astrological information.
+    - drop_start (int): The starting index of the rows to drop (inclusive).
+    - drop_end (int): The ending index of the rows to drop (inclusive).
+    - user_name (str): The suffix to add to the columns of the first person.
+    - relation (str): The suffix to add to the columns of the second person.
+
+    Returns:
+    - pd.DataFrame: The concatenated and filtered dataframe.
+    """
+    # Add a suffix to distinguish between person 1 and person 2
+    df_person1_suffixed = df_person1.add_suffix(" of {}".format(user_name))
+    df_person2_suffixed = df_person2.add_suffix(" of {}".format(relation))
+
+    # Concatenate the dataframes side by side
+    combined_df = pd.concat([df_person1_suffixed, df_person2_suffixed], axis=1)
+
+    # Drop rows in the specified range
+    filtered_df = combined_df.drop(index=range(drop_start, drop_end + 1), errors='ignore')
+
+    return filtered_df
+
+def get_compatibility(sign1, sign2, dataframe):
+    """
+    Returns the compatibility score between two signs.
+    
+    :param sign1: String, first astrological sign
+    :param sign2: String, second astrological sign
+    :param dataframe: DataFrame, the DataFrame containing the compatibility scores
+    :return: Integer, compatibility score (returns None if not found)
+    """
+    # Ensure that sign1 and sign2 are in the same order as in the DataFrame
+    if (sign1, sign2) not in zip(dataframe["Sign 1"], dataframe["Sign 2"]):
+        # If not found, swap the signs
+        sign1, sign2 = sign2, sign1
+    
+    # Query the DataFrame
+    score = dataframe[(dataframe["Sign 1"] == sign1) & (dataframe["Sign 2"] == sign2)]["Compatibility Score"].values
+    return score[0] if len(score) > 0 else None
+
+def calculate_compatibility(person1_df, person2_df, compatibility_df):
+    """
+    Calculates the astrological compatibility between two individuals based on selected celestial bodies and a compatibility DataFrame.
+
+    This function compares the astrological signs of the Sun, Moon, Mercury, Venus, and Mars placements from two different persons' 
+    astrological charts and calculates the compatibility score for each placement. It then averages these scores to determine an overall compatibility score.
+
+    :param person1_df: DataFrame, containing astrological placements and details for person 1
+    :param person2_df: DataFrame, containing astrological placements and details for person 2
+    :param compatibility_df: DataFrame, containing the compatibility scores between signs
+    :return: Tuple, a DataFrame with individual compatibility scores and an overall compatibility score as a pandas Series
+    """
+
+    # Get the list of celestial bodies to compare
+    bodies_to_compare = ['Sun', 'Moon', 'Mercury', 'Venus', 'Mars']
+    
+    # Calculate compatibility for each body and store the scores
+    scores = []
+    for body in bodies_to_compare:
+        sign1 = person1_df.loc[person1_df['name'] == body, 'sign'].values[0]
+        sign2 = person2_df.loc[person2_df['name'] == body, 'sign'].values[0]
+        score = get_compatibility(sign1, sign2, compatibility_df)
+
+        scores.append({
+            'Placement': body,
+            'Person1_Sign': sign1,
+            'Person2_Sign': sign2,
+            'Compatibility_Score': score
+        })
+
+    # Create a DataFrame for individual scores
+    final_scores = pd.DataFrame(scores)
+    # Calculate the overall average score
+    overall_score = final_scores[['Compatibility_Score']].mean()
+
+    # Return the DataFrame of scores and the overall score
+    return final_scores, overall_score
+
+""" # This function retrieves the compatibility score for a pair of signs
+def get_compatibility(sign1, sign2, compatibility_data):
+    # Find the compatibility score for the combination of sign1 and sign2
+    compatibility_row = compatibility_data.loc[
+        (compatibility_data['Sign 1'] == sign1) & (compatibility_data['Sign 2'] == sign2)
+    ]
+    # If the combination does not exist, try the opposite combination
+    if compatibility_row.empty:
+        compatibility_row = compatibility_data.loc[
+            (compatibility_data['Sign 1'] == sign2) & (compatibility_data['Sign 2'] == sign1)
+        ]
+    # Return the compatibility score
+    return compatibility_row['Compatibility Score'].values[0] """
+
+def plot_compatibility_distribution(df, column='Compatibility Score'):
+    """
+    Plot the distribution of compatibility scores for zodiac sign pairs.
+
+    This function takes a pandas DataFrame and a column name as input. It then plots a histogram 
+    showing the distribution of the compatibility scores in the specified column.
+
+    :param df: A pandas DataFrame containing zodiac compatibility data.
+    :type df: pandas.DataFrame
+    :param column: The name of the column in the DataFrame to plot. Defaults to 'Compatibility Score'.
+    :type column: str
+    """
+    # Plotting the histogram
+    plt.figure(figsize=(10, 6))
+    plt.hist(df[column], edgecolor='black')
+    
+    # Adding titles and labels
+    plt.title('Compatibility Score Distribution')
+    plt.xlabel('Compatibility Score')
+    plt.ylabel('Number of Zodiac Sign Pairs')
+    
+    # Showing the plot
+    plt.show() 
 
 def calculate_presence_percentages(df):
     """
@@ -264,28 +319,3 @@ def calculate_presence_percentages(df):
 
     return output
 
-    
-#!TODO find a different geo checker, this one has a strict limit on requests
-def check_location(city, country):
-    """
-    Check if a given location exists.
-
-    Args:
-        city (str): The name of the city.
-        country (str): The name of the country.
-
-    Returns:
-        bool: True if the location exists, False otherwise.
-    """
-    # Combine city and country for the query
-    location_query = f"{city}, {country}"
-
-    # Using Nominatim Geocoder
-    geolocator = Nominatim(user_agent="Astrology_location_test")
-
-    try:
-        # Attempt to get location information
-        location = geolocator.geocode(location_query)
-        return location is not None
-    except GeocoderTimedOut:
-        return False

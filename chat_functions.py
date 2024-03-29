@@ -82,10 +82,29 @@ def ask_question(question, model, client, chart_str):
 
         return astro_chat(message=question_prompt, model=model, client=client)
 
+def create_relationship_report(name, chart, relationship, relationship_chart, model, client):
+    message = display_random_message()
+    with st.spinner(message):
+
+        chart = chart.to_string(justify='left')
+        relationship_chart = relationship_chart.to_string(justify='left')
+
+        chart_info = (
+            f"You are a sassy, no bullshit astrologer, and {name} is asking you to interpret the astrological relationship to their {relationship}."
+            f"{name}'s chart is \n{chart}\n"
+            f"Their {relationship}'s chart is \n{relationship_chart}\n"
+            f"Analyse the charts and select only a few things to focus on, don't try to explain everything."
+            f"Paint a picture of the vibes between {name} and their {relationship}. Don't say the word 'vibes'."
+            f"Start your interpretation by focusing on points of compatability between {name} and their {relationship}."
+            f"Point out the biggest challange in this relationship, roast it."
+            f"Finish with sarcastic summary."
+        )
+
+        return astro_chat(message=chart_info, model=model, client=client)
 
 def display_random_message():
     """
-    Displays one of ten random messages.
+    Displays one of the random messages.
     """
     messages = [
         "Sifting through cosmic vibes",
