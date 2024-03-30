@@ -20,7 +20,7 @@ st.set_page_config(
     layout="wide"
 )
 st.title(':violet[Zazatron]')
-st.write(":violet[__Embrace Saturn's Shade and Talk to the AI-Cosmos When Humans r 2 smol__] \n\n :blue[_None of your data is stored, it goes 'poof' as soon as you close the browser_]")
+st.write(":violet[__Believe in astrology? Me neither... yet here we are, letting Zazatron dissect our astral fates as if the Universe and AI had nothing better to do than throw shade at our bad decisions.__] \n\n :blue[_None of your data is stored, it goes 'poof' as soon as you close the browser_]")
 st.write(" ")
 st.write(" ")
 
@@ -67,14 +67,14 @@ st.session_state['astro_details_relationship'] = {
     'date_relationship': date_relationship
 }
 
-
+#Page setup
 chart, roast, relationships, questions, = st.columns(4)
 
 if "tab_selected" not in st.session_state:
     st.session_state["tab_selected"] = None
 
 with chart:
-    st.button(":violet[Reveal Your Astrological Chart <-- click this first]", use_container_width=True, key="Chart", on_click=lambda: 
+    st.button(":violet[Reveal Your Astrological Chart]", use_container_width=True, key="Chart", on_click=lambda: 
               st.session_state.update({"tab_selected": "Chart"}), type="primary" if st.session_state["tab_selected"] == "Chart" else "secondary")        
 with roast:
     st.button(":violet[Roast My Chart]", use_container_width=True, key="Roast", on_click=lambda: 
@@ -85,9 +85,9 @@ with relationships:
 with questions:
     st.button(":violet[Ask Zazatron a Question]", use_container_width=True, key="Question", on_click=lambda: 
               st.session_state.update({"tab_selected": "Question"}), type="primary" if st.session_state["tab_selected"] == "Question" else "secondary") 
+ 
 
-#!todo add chart calculator for all tabs    
-
+#TAB SELECTION 1
 if st.session_state["tab_selected"] == "Chart":
     st.subheader(f"{name}'s Astrological Chart")
     if 'chart_output' not in st.session_state or \
@@ -103,10 +103,18 @@ if st.session_state["tab_selected"] == "Chart":
     # Display the astrological chart from the session state
     st.write(st.session_state['chart_output'])
 
+#TAB SELECTION 2
 if st.session_state["tab_selected"] == "Roast":
      # Display a message if the astrological chart is not yet generated
-    if 'chart_output' not in st.session_state:
-        st.subheader(":orange[Please reveal your Astrological Chart before Zazatron can roast it.]")
+    if 'chart_output' not in st.session_state or \
+       (name, date, time, city, nation) != st.session_state.get('last_astro_details', (None, None, None, None, None)):
+
+        # Generate the astrological chart and save it to the session state
+        fullchart_df = create_fullchart_df(name=name, date=date, time=time, city=city, nation=nation)
+        st.session_state['chart_output'] = fullchart_df
+
+        # Update the last known user details in the session state
+        st.session_state['last_astro_details'] = (name, date, time, city, nation)
     else:
         # Only generate and save the roast if it hasn't been done yet or if user details have changed
         if 'chart_roast' not in st.session_state or \
@@ -119,14 +127,23 @@ if st.session_state["tab_selected"] == "Roast":
         # Display the roast from the session state
         st.write(st.session_state['chart_roast'])
 
+#TAB SELECTION 3
 if st.session_state["tab_selected"] == "Compatibility":
-    if 'chart_output' not in st.session_state:
-        st.subheader(":orange[Please reveal your Astrological Chart before Zazatron can calculate your compatibility with others.]")
+    if 'chart_output' not in st.session_state or \
+       (name, date, time, city, nation) != st.session_state.get('last_astro_details', (None, None, None, None, None)):
+
+        # Generate the astrological chart and save it to the session state
+        fullchart_df = create_fullchart_df(name=name, date=date, time=time, city=city, nation=nation)
+        st.session_state['chart_output'] = fullchart_df
+
+        # Update the last known user details in the session state
+        st.session_state['last_astro_details'] = (name, date, time, city, nation)
+
     st.subheader("Can the stars explain my relationships?")
     # User Input
     col00, col01 = st.columns(2)
     with col00:
-        name_relationship = st.text_input("Describe who this person is to you: _parent, sibling, friend, partner, lover, crush, tinder match, enemy, boss, minion, pet, etc._'", key="relationship_name")
+        name_relationship = st.text_input("Describe who this person is to you: _parent, sibling, friend, partner, lover, crush, tinder match, enemy, boss, minion, pet, etc._", key="relationship_name")
     with col01:
         date_relationship = st.date_input("When is their birthday?", key="relationship_date", min_value=datetime.date(1900, 1, 1), max_value=datetime.date.today())
 
@@ -153,7 +170,18 @@ if st.session_state["tab_selected"] == "Compatibility":
     if 'relationship_report' in st.session_state:
         st.write(st.session_state['relationship_report'])
 
+#TAB SELECTION 4
 if st.session_state["tab_selected"] == "Question":
+    if 'chart_output' not in st.session_state or \
+       (name, date, time, city, nation) != st.session_state.get('last_astro_details', (None, None, None, None, None)):
+
+        # Generate the astrological chart and save it to the session state
+        fullchart_df = create_fullchart_df(name=name, date=date, time=time, city=city, nation=nation)
+        st.session_state['chart_output'] = fullchart_df
+
+        # Update the last known user details in the session state
+        st.session_state['last_astro_details'] = (name, date, time, city, nation)    
+
     user_question = st.text_input(" ", placeholder="Your Question for the AI Clairvoyant")
 
     # Check if the 'Ask the Question' button is clicked

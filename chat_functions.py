@@ -110,7 +110,7 @@ def display_random_message():
         "Sifting through cosmic vibes",
         "Tripping on star dust",
         "I'm sworn to carry your burdens... and answer your questions, I guess",
-        "Poking the either with a stick",
+        "Poking the ether with a stick",
         "Gossiping with rogue planets",
         "Spilling the cosmic tea",
         "Transcribing answers from the void",
