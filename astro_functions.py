@@ -50,7 +50,8 @@ def create_fullchart_df(name, date, time, city, nation):
     Returns:
     - fullchart_df: DataFrame - A DataFrame with the astrological chart information.
     """
-    if check_location(city, nation):
+    #if check_location(city, nation):
+    if 300 > 200:
         year = date.year
         month = date.month
         day = date.day
