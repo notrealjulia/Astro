@@ -25,7 +25,7 @@ st.write(" ")
 st.write(" ")
 
 #Change to True to use the system variable OPENAI_API_KEY
-client = initialize_openai_client(use_env_variable=False)
+client = initialize_openai_client(use_env_variable=True)
 
 selected_model = "gpt-4"  # Setting the default model
 if "openai_model" not in st.session_state:
