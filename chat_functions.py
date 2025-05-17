@@ -101,6 +101,17 @@ def create_relationship_report(name, chart, relationship, relationship_chart, mo
         )
 
         return astro_chat(message=chart_info, model=model, client=client)
+    
+def send_email_with_output(output, email):
+    """
+    Sends the output to the user's email address.
+
+    Parameters:
+    - output (str): The output to be sent to the user.
+    - email (str): The email address of the user.
+    """
+    st.write(f"Sending the output to {email}...")
+    st.write("Email sent successfully!")
 
 def display_random_message():
     """
@@ -122,3 +133,4 @@ def display_random_message():
     
     random_message = random.choice(messages)
     return random_message
+

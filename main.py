@@ -11,6 +11,10 @@ from chat_functions import *
 from geopy.geocoders import Nominatim
 from geopy.exc import GeocoderTimedOut
 
+#TODO! Procedural: Add langauge selection, add option to email the output and save the email, add option to add time for compatability calculation. 
+#TODO! Astrological: add function to detect stellums, for compatability add function to calculate 2:7 relationships, etc.
+#TODO! Randomize the prompts for the roast.
+
 #Page setup
 logo = "icons/stars.png"
 
